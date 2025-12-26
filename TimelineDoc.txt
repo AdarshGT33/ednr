@@ -8,3 +8,9 @@ Thursday 25/12/2025
 -> Initialized hot reload for better development experience.
 -> Setted up env variables for SMTP.
 -> Pushed code onto github.
+
+Friday 26/12/2025
+-> Email and SMS adapters Created.
+-> Modified events struct to accept dynamic recepient and introduced "Channels" for real time engine.
+-> Created background worker to work on the events in the background.
+-> Introduced Redis to empower background worker to handle events asynchronously.
