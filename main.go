@@ -23,14 +23,14 @@ var adapter map[string]adapters.NotificationAdapter
 const RETRY_QUEUE_KEY = "retry_queue"
 
 func main() {
-	rdb = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file: %s\n", err)
 	}
+
+	rdb = redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
 
 	adapter = map[string]adapters.NotificationAdapter{
 		"email": adapters.NewEmailAdapter(),
@@ -105,17 +105,17 @@ func event_processor() {
 		event.AttemptCount++
 		event.LastAttemptAt = time.Now()
 
-		err := adap_er.Send(event.Recipient, event.Message); err != nil {
-			fmt.Printf("Failed to send: %v\n", err)
+		if err := adap_er.Send(event.Recipient, event.Message); err != nil {
+			fmt.Printf("Failed to send: %v", err)
 			//impliment DLQ here
 			if event.ShouldRetry() {
 				// Schedule for retry
-				if retryErr := utils.ScheduleRetry(ctx, event, err); retryErr != nil {
+				if retryErr := utils.ScheduleRetry(ctx, rdb, event, err); retryErr != nil {
 					fmt.Printf("❌ Failed to schedule retry: %v\n", retryErr)
 				}
 			} else {
 				// Max attempts reached, move to DLQ
-				if dlqErr := utils.MoveToDLQ(ctx, event, err); dlqErr != nil {
+				if dlqErr := utils.MoveToDLQ(ctx, rdb, event, err); dlqErr != nil {
 					fmt.Printf("❌ Failed to move to DLQ: %v\n", dlqErr)
 				}
 			}
