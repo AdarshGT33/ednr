@@ -14,3 +14,7 @@ Friday 26/12/2025
 -> Modified events struct to accept dynamic recepient and introduced "Channels" for real time engine.
 -> Created background worker to work on the events in the background.
 -> Introduced Redis to empower background worker to handle events asynchronously.
+
+Monday 29/12/2025
+-> Real Time Engine Implimented.
+-> DLQ implimented.
