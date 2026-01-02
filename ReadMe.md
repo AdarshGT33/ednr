@@ -24,8 +24,6 @@ EDNR is a backend microservice that solves the challenge of **multi-channel noti
 Modern applications need to notify users through different channels depending on context:
 - 🚨 Critical alerts → SMS (immediate)
 - 📧 Weekly summaries → Email (batched)
-- 💬 Team updates → Slack (real-time)
-- 🔔 App notifications → Push (mobile)
 
 Managing this logic across codebases leads to:
 - ❌ Duplicated notification code
@@ -52,10 +50,6 @@ Managing this logic across codebases leads to:
 |---------|--------|----------|
 | 📧 Email | ✅ Production | Newsletters, receipts, reports |
 | 📱 SMS | ✅ Production | OTPs, critical alerts |
-| 💬 Slack | ✅ Production | Team notifications, alerts |
-| 🎮 Discord | ✅ Production | Community updates |
-| 🔔 Push | 🚧 Planned | Mobile notifications |
-| 📞 Voice | 🚧 Planned | Emergency calls |
 
 ---
 
@@ -85,12 +79,12 @@ Managing this logic across codebases leads to:
                ▼
 ┌──────────────────────────────────────┐
 │      Event Processor Worker          │
-│  ┌────────────────────────────┐     │
-│  │   1. Parse Event           │     │
-│  │   2. Apply Rules Engine    │     │
-│  │   3. Select Adapter        │     │
-│  │   4. Deliver + Retry       │     │
-│  └────────────────────────────┘     │
+│  ┌────────────────────────────┐      │
+│  │   1. Parse Event           │      │
+│  │   2. Apply Rules Engine    │      │
+│  │   3. Select Adapter        │      │
+│  │   4. Deliver + Retry       │      │
+│  └────────────────────────────┘      │
 └───────┬──────────────────────────────┘
         │
         ▼
@@ -218,6 +212,9 @@ RETRY_BACKOFF_SECONDS=2
 DLQ_ENABLED=true
 ```
 
+## 📷 Photos
+
+![SMS and Email]("images/working_proofs.png")
 
 ---
 
