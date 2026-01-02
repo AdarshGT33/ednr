@@ -23,23 +23,21 @@ func NewSMSAdapter() *SMSAdapter {
 }
 
 func (s *SMSAdapter) Send(to, message string) error {
-	client := twilio.NewRestClient()
+	client := twilio.NewRestClientWithParams(twilio.ClientParams{
+		Username: s.TwillioSID,
+		Password: s.TwillioPassword,
+	})
 
 	params := &api.CreateMessageParams{}
 	params.SetBody(message)
 	params.SetFrom(s.TwillioNumber)
 	params.SetTo(to)
 
-	resp, err := client.Api.CreateMessage(params)
+	_, err := client.Api.CreateMessage(params)
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	} else {
-		if resp.Body != nil {
-			fmt.Println(*resp.Body)
-		} else {
-			fmt.Println(*resp.Body)
-		}
+		return err
 	}
+
+	fmt.Println("📨 SMS sent successfully")
 	return nil
 }

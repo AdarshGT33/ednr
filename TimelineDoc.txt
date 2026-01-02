@@ -18,3 +18,9 @@ Friday 26/12/2025
 Monday 29/12/2025
 -> Real Time Engine Implimented.
 -> DLQ implimented.
+
+Friday 02/01/2026
+-> Fixed real time engine issues by modifiying event struct.
+-> Fixed redis availability and queue-pushing error.
+-> Modified sms adapter's handling.
+-> Receiving sms and emails now on the basis of severity.

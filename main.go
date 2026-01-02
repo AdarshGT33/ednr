@@ -30,6 +30,7 @@ func main() {
 
 	rdb = redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
+		DB:   0,
 	})
 
 	adapter = map[string]adapters.NotificationAdapter{
@@ -49,9 +50,10 @@ func main() {
 			return
 		}
 
-		if _, exists := adapter[event.Channel]; !exists {
+		channel := events.DetermineChannel(event)
+		if _, exists := adapter[channel]; !exists {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error": fmt.Sprintf("unknown channel: %s", event.Channel),
+				"error": fmt.Sprintf("unknown channel: %s", channel),
 			})
 			return
 		}
@@ -62,9 +64,12 @@ func main() {
 		event.AttemptCount = 0
 		event.CreatedAt = time.Now()
 
+		eventJSON, _ := json.Marshal(event)
+		rdb.LPush(ctx, "event_queue", eventJSON)
+
 		c.JSON(http.StatusOK, gin.H{
 			"status":       "queued",
-			"channel":      event.Channel,
+			"channel":      channel,
 			"max_attempts": event.MaxAttempts,
 		})
 	})
@@ -83,6 +88,7 @@ func event_processor() {
 		//BRPop: Blocking Right Pop
 		//Blocking means wait here until something appears in the queue
 		//Right means pop from the right end of the queue
+		fmt.Println("have entered the for loop")
 		result, err := rdb.BRPop(ctx, 0, "event_queue").Result()
 		if err != nil {
 			fmt.Printf("Error popping from queue: %v\n", err)
@@ -97,9 +103,10 @@ func event_processor() {
 		}
 
 		//sending events on the basis of severity
-		adap_er, exists := adapter[event.Channel]
+		channel := events.DetermineChannel(event)
+		adap_er, exists := adapter[channel]
 		if !exists {
-			fmt.Printf("Unknown channel: %s\n", event.Channel)
+			fmt.Printf("Unknown channel: %s\n", channel)
 		}
 
 		event.AttemptCount++
@@ -120,7 +127,7 @@ func event_processor() {
 				}
 			}
 		} else {
-			fmt.Printf("Event successfully send: %s\n", event.Channel)
+			fmt.Printf("Event successfully send: %s\n", channel)
 		}
 	}
 }

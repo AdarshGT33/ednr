@@ -6,7 +6,7 @@ type Events struct {
 	User_ID    string `json:"user_id"`
 	Event_Type string `json:"event_type"`
 	Message    string `json:"message"`
-	Channel    string `json:"channel"`
+	Severity   string `json:"severity"`
 	Recipient  string `json:"recipient"`
 
 	AttemptCount  int       `json:"attempt_count"`
@@ -14,6 +14,14 @@ type Events struct {
 	LastError     string    `json:"last_error"`
 	CreatedAt     time.Time `json:"created_at"`
 	LastAttemptAt time.Time `json:"last_attempt_at"`
+}
+
+func DetermineChannel(event Events) string {
+	if event.Severity == "high" {
+		return "sms"
+	} else {
+		return "email"
+	}
 }
 
 func (e *Events) ShouldRetry() bool {
