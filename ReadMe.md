@@ -121,7 +121,7 @@ Twilio account (SMS)
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/event-notification-router.git
+git clone https://github.com/yourusername/ednr.git
 cd event-notification-router
 ```
 
