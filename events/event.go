@@ -17,11 +17,15 @@ type Events struct {
 }
 
 func DetermineChannel(event Events) string {
-	if event.Severity == "high" {
+	switch event.Severity {
+	case "high":
 		return "sms"
-	} else {
+	case "low":
 		return "email"
+	default:
+		return "flaky"
 	}
+
 }
 
 func (e *Events) ShouldRetry() bool {
