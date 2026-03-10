@@ -36,6 +36,7 @@ func main() {
 	adapter = map[string]adapters.NotificationAdapter{
 		"email": adapters.NewEmailAdapter(),
 		"sms":   adapters.NewSMSAdapter(),
+		"flaky": adapters.NewFlakyAdapter(1.0),
 	}
 
 	go event_processor()
@@ -102,7 +103,16 @@ func event_processor() {
 			continue
 		}
 
-		//sending events on the basis of severity
+		// Deduplication check
+		isDup, err := utils.IsDuplicate(ctx, rdb, event)
+		if err != nil {
+			fmt.Printf("⚠️ Dedup check error (proceeding anyway): %v\n", err)
+		} else if isDup {
+			fmt.Printf("🔁 [DEDUP] Skipping duplicate event: %s for user %s\n", event.Event_Type, event.User_ID)
+			continue
+		}
+
+		// sending events on the basis of severity
 		channel := events.DetermineChannel(event)
 		adap_er, exists := adapter[channel]
 		if !exists {
@@ -127,7 +137,10 @@ func event_processor() {
 				}
 			}
 		} else {
-			fmt.Printf("Event successfully send: %s\n", channel)
+			fmt.Printf("✅ Event successfully sent: %s\n", channel)
+			if markErr := utils.MarkProcessed(ctx, rdb, event); markErr != nil {
+				fmt.Printf("⚠️ Failed to mark event as processed: %v\n", markErr)
+			}
 		}
 	}
 }
