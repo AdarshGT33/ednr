@@ -14,16 +14,18 @@ type Events struct {
 	LastError     string    `json:"last_error"`
 	CreatedAt     time.Time `json:"created_at"`
 	LastAttemptAt time.Time `json:"last_attempt_at"`
+
+	FallbackChannel string `json:"fallback_channel,omitempty"`
 }
 
-func DetermineChannel(event Events) string {
+func DetermineChannel(event Events) (primary string, fallback string) {
 	switch event.Severity {
 	case "high":
-		return "sms"
+		return "sms", "email" // SMS is primary, email is fallback
 	case "low":
-		return "email"
+		return "email", "" // email has no fallback
 	default:
-		return "flaky"
+		return "flaky", "email" // flaky gets email as safety net
 	}
 
 }

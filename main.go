@@ -51,7 +51,8 @@ func main() {
 			return
 		}
 
-		channel := events.DetermineChannel(event)
+		channel, fallback := events.DetermineChannel(event)
+		event.FallbackChannel = fallback
 		if _, exists := adapter[channel]; !exists {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": fmt.Sprintf("unknown channel: %s", channel),
@@ -113,10 +114,11 @@ func event_processor() {
 		}
 
 		// sending events on the basis of severity
-		channel := events.DetermineChannel(event)
+		channel, _ := events.DetermineChannel(event)
 		adap_er, exists := adapter[channel]
 		if !exists {
 			fmt.Printf("Unknown channel: %s\n", channel)
+			continue
 		}
 
 		event.AttemptCount++
@@ -126,14 +128,13 @@ func event_processor() {
 			fmt.Printf("Failed to send: %v", err)
 			//impliment DLQ here
 			if event.ShouldRetry() {
-				// Schedule for retry
 				if retryErr := utils.ScheduleRetry(ctx, rdb, event, err); retryErr != nil {
 					fmt.Printf("❌ Failed to schedule retry: %v\n", retryErr)
 				}
 			} else {
-				// Max attempts reached, move to DLQ
-				if dlqErr := utils.MoveToDLQ(ctx, rdb, event, err); dlqErr != nil {
-					fmt.Printf("❌ Failed to move to DLQ: %v\n", dlqErr)
+				// All retries exhausted — try fallback before DLQ
+				if fallbackErr := utils.AttemptFallback(ctx, rdb, event, adapter, err); fallbackErr != nil {
+					fmt.Printf("❌ Failed to handle fallback: %v\n", fallbackErr)
 				}
 			}
 		} else {
